@@ -46,6 +46,7 @@ private:
     void clearButtonClicked ();
     void pauseButtonClicked ();
     void setButtonClicked ();
+    void exportButtonClicked ();
     void syncTempoButtonClicked ();
     void syncBeatButtonClicked ();
     void hotkeyClicked (int hotkeyId);
@@ -55,7 +56,7 @@ private:
 
     Slider tempoSlider;
     Slider positionSlider;
-    TextButton openButton, clearButton, pauseButton, setButton;
+    TextButton openButton, clearButton, pauseButton, setButton, exportButton;
     ToggleButton syncTempoButton, syncBeatButton;
 
     OwnedArray<Hotkey> hotkeys;

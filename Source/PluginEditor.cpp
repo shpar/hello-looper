@@ -53,6 +53,11 @@ AudioProcessorEditor (&p), Thread ("Background Thread"), processor (p)
     setButton.setEnabled (false);
     setButton.setClickingTogglesState (true);
 
+    addAndMakeVisible (exportButton);
+    exportButton.setButtonText("Export loop");
+    exportButton.addListener(this);
+    exportButton.setEnabled(false);
+
     addAndMakeVisible (syncTempoButton);
     syncTempoButton.setButtonText ("Sync Tempo");
     syncTempoButton.addListener (this);
@@ -118,8 +123,9 @@ void HelloLooperAudioProcessorEditor::resized()
                                    (mainComponentWidth - 20) / 4, 20);
         }
     }
-    syncTempoButton.setBounds (10, 160, (mainComponentWidth - 20) / 2, 20);
-    syncBeatButton.setBounds ((mainComponentWidth - 20) / 2 + 10, 160, (mainComponentWidth - 20) / 2, 20);
+    syncTempoButton.setBounds (10, 160, (mainComponentWidth - 20) / 3, 20);
+    syncBeatButton.setBounds ((mainComponentWidth - 20) / 3 + 10, 160, (mainComponentWidth - 20) / 3, 20);
+    exportButton.setBounds((mainComponentWidth - 20) * 2 / 3 + 10, 160, (mainComponentWidth - 20) / 3, 20);
 }
 
 void HelloLooperAudioProcessorEditor::run()
@@ -220,6 +226,7 @@ void HelloLooperAudioProcessorEditor::buttonClicked(Button* button)
     if (button == &clearButton)     clearButtonClicked();
     if (button == &pauseButton)     pauseButtonClicked();
     if (button == &setButton)       setButtonClicked();
+    if (button == &exportButton)    exportButtonClicked();
     if (button == &syncTempoButton) syncTempoButtonClicked();
     if (button == &syncBeatButton) syncBeatButtonClicked();
     for (int i = 0; i < hotkeys.size(); i++)
@@ -245,6 +252,7 @@ void HelloLooperAudioProcessorEditor::openButtonClicked ()
         clearButton.setEnabled (true);
         pauseButton.setEnabled (true);
         setButton.setEnabled (true);
+        exportButton.setEnabled (true);
         positionSlider.setEnabled (true);
         if (!syncTempoButton.getToggleState())
         {
@@ -263,6 +271,7 @@ void HelloLooperAudioProcessorEditor::clearButtonClicked ()
     setButton.setEnabled (false);
     positionSlider.setEnabled (false);
     tempoSlider.setEnabled (false);
+    exportButton.setEnabled (false);
     syncTempoButton.setEnabled (false);
     syncBeatButton.setEnabled (false);
     for (auto hotkey : hotkeys)
@@ -302,6 +311,29 @@ void HelloLooperAudioProcessorEditor::setButtonClicked ()
     for (auto& hotkey : hotkeys)
     {
         hotkey->setEnabled (true);
+    }
+}
+
+void HelloLooperAudioProcessorEditor::exportButtonClicked ()
+{
+    FileChooser chooser ("Save loop as...",
+                         File(),
+                         "*.wav");
+    if (chooser.browseForFileToSave(true))
+    {
+        auto file = chooser.getResult();
+        FileOutputStream* fos = new FileOutputStream(file);
+
+        double systemSampleRate = processor.currentSampleRate;
+        std::unique_ptr<AudioFormatWriter> writer (WavAudioFormat().createWriterFor(fos, systemSampleRate, 2, 16, nullptr, 0));
+        if (writer.get() != nullptr)
+        {
+            ReferenceCountedBuffer::Ptr retainedCurrentBuffer (processor.currentBuffer);
+            AudioSampleBuffer* currentAudioSampleBuffer (retainedCurrentBuffer->getAudioSampleBuffer());
+            int position = positionSlider.getValue() * systemSampleRate;
+            int numSamples =  systemSampleRate * 60 / tempoSlider.getValue();
+            writer->writeFromAudioSampleBuffer(*currentAudioSampleBuffer, position, numSamples);
+        }
     }
 }
 
