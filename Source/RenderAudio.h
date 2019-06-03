@@ -1,11 +1,19 @@
 /*
-  ==============================================================================
+    hello looper - a simple one-beat sampler
+    Copyright (C) 2019 Dan Grahelj
 
-    RenderAudio.h
-    Created: 15 Nov 2017 8:51:30pm
-    Author:  Dan
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-  ==============================================================================
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "ReferenceCountedObject.h"
@@ -32,6 +40,11 @@ public:
         }
         else
         {
+            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+            {
+                bufferToFill.clear (i, 0, bufferToFill.getNumSamples());
+            }
+
             AudioSampleBuffer* currentAudioSampleBuffer (retainedCurrentBuffer->getAudioSampleBuffer());
             int position = retainedCurrentBuffer->position;
 
@@ -44,7 +57,7 @@ public:
             int currentPositionSamples = positionSamples;
 
             if (position < currentPositionSamples)
-            position = currentPositionSamples;
+                position = currentPositionSamples;
 
             const int bufferInputChannels = currentAudioSampleBuffer->getNumChannels();
 
@@ -64,6 +77,14 @@ public:
                 int bufferSamplesRemaining = jmin (bufferSamplesRemainingBeat,
                                                bufferSamplesRemainingFile);
 
+                // NOT WORKING
+                if (bufferSamplesRemainingBeat > 0 && bufferSamplesRemainingFile <= 0) {
+                    for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+                        {
+                            bufferToFill.clear (i, position, outputSamplesRemaining);
+                        }
+                }
+                // END OF
                 int samplesThisTime = jmin (outputSamplesRemaining, bufferSamplesRemaining);
 
                 for (int channel = 0; channel < totalNumOutputChannels; ++channel)

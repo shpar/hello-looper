@@ -1,21 +1,31 @@
 /*
-  ==============================================================================
+    hello looper - a simple one-beat sampler
+    Copyright (C) 2019 Dan Grahelj
 
-    This file was auto-generated!
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    It contains the basic framework code for a JUCE plugin editor.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  ==============================================================================
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "keyfinder.h"
 
 //==============================================================================
 HelloLooperAudioProcessorEditor::HelloLooperAudioProcessorEditor (HelloLooperAudioProcessor& p):
-AudioProcessorEditor (&p), Thread ("Background Thread"), processor (p)
+AudioProcessorEditor (&p), Thread ("Background Thread"), processor (p), tempoAttachment (p.state, "tempo",  tempoSlider),
+              positionAttachment (p.state, "position", positionSlider)
 {
-    setSize (300, 200);
+    setSize (400, 200);
 
     addAndMakeVisible (tempoSlider);
     tempoSlider.setRange (1, 300, 1);
@@ -24,14 +34,16 @@ AudioProcessorEditor (&p), Thread ("Background Thread"), processor (p)
     tempoSlider.setTextValueSuffix (" BPM");
     tempoSlider.addListener (this);
     tempoSlider.setEnabled (false);
+    tempoSlider.setNumDecimalPlacesToDisplay(1);
 
     addAndMakeVisible (positionSlider);
-    positionSlider.setRange (0, 3.0);
+    positionSlider.setRange (0, 1.0);
     positionSlider.setValue (0);
     positionSlider.setTextBoxIsEditable(true);
     positionSlider.setTextValueSuffix (" s");
     positionSlider.addListener (this);
     positionSlider.setEnabled (false);
+    positionSlider.setNumDecimalPlacesToDisplay(8);
 
     addAndMakeVisible (openButton);
     openButton.setButtonText ("Open");
@@ -57,6 +69,11 @@ AudioProcessorEditor (&p), Thread ("Background Thread"), processor (p)
     exportButton.setButtonText("Export loop");
     exportButton.addListener(this);
     exportButton.setEnabled(false);
+
+    addAndMakeVisible (analyzeButton);
+    analyzeButton.setButtonText("Analyze");
+    analyzeButton.addListener(this);
+    analyzeButton.setEnabled(false);
 
     addAndMakeVisible (syncTempoButton);
     syncTempoButton.setButtonText ("Sync Tempo");
@@ -123,9 +140,10 @@ void HelloLooperAudioProcessorEditor::resized()
                                    (mainComponentWidth - 20) / 4, 20);
         }
     }
-    syncTempoButton.setBounds (10, 160, (mainComponentWidth - 20) / 3, 20);
-    syncBeatButton.setBounds ((mainComponentWidth - 20) / 3 + 10, 160, (mainComponentWidth - 20) / 3, 20);
-    exportButton.setBounds((mainComponentWidth - 20) * 2 / 3 + 10, 160, (mainComponentWidth - 20) / 3, 20);
+    syncTempoButton.setBounds (10, 160, (mainComponentWidth - 20) / 4, 20);
+    syncBeatButton.setBounds ((mainComponentWidth - 20) / 4 + 10, 160, (mainComponentWidth - 20) / 4, 20);
+    exportButton.setBounds((mainComponentWidth - 20) * 2 / 4 + 10, 160, (mainComponentWidth - 20) / 4, 20);
+    analyzeButton.setBounds((mainComponentWidth - 20) * 3 / 4 + 10, 160, (mainComponentWidth - 20) / 4, 20);
 }
 
 void HelloLooperAudioProcessorEditor::run()
@@ -164,8 +182,11 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen()
             int duration = reader->lengthInSamples / reader->sampleRate;
             // limit samples to 60 seconds
             duration = jmin (60, duration);
+            sampleDuration = duration;
 
-            positionSlider.setRange(0, duration);
+            DBG("sample duration " << duration);
+
+//            positionSlider.setRange(0, duration);
 
             ReferenceCountedBuffer::Ptr newBuffer
             = new ReferenceCountedBuffer (reader->numChannels,
@@ -184,7 +205,7 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen()
 
 void HelloLooperAudioProcessorEditor::updatePosition()
 {
-    processor.positionSamples = positionSlider.getValue() * processor.currentSampleRate;
+    processor.positionSamples = positionSlider.getValue() * processor.currentSampleRate * sampleDuration;
 }
 
 void HelloLooperAudioProcessorEditor::timerCallback()
@@ -227,6 +248,7 @@ void HelloLooperAudioProcessorEditor::buttonClicked(Button* button)
     if (button == &pauseButton)     pauseButtonClicked();
     if (button == &setButton)       setButtonClicked();
     if (button == &exportButton)    exportButtonClicked();
+    if (button == &analyzeButton)    analyzeButtonClicked();
     if (button == &syncTempoButton) syncTempoButtonClicked();
     if (button == &syncBeatButton) syncBeatButtonClicked();
     for (int i = 0; i < hotkeys.size(); i++)
@@ -253,6 +275,7 @@ void HelloLooperAudioProcessorEditor::openButtonClicked ()
         pauseButton.setEnabled (true);
         setButton.setEnabled (true);
         exportButton.setEnabled (true);
+        analyzeButton.setEnabled (true);
         positionSlider.setEnabled (true);
         if (!syncTempoButton.getToggleState())
         {
@@ -272,6 +295,7 @@ void HelloLooperAudioProcessorEditor::clearButtonClicked ()
     positionSlider.setEnabled (false);
     tempoSlider.setEnabled (false);
     exportButton.setEnabled (false);
+    analyzeButton.setEnabled (false);
     syncTempoButton.setEnabled (false);
     syncBeatButton.setEnabled (false);
     for (auto hotkey : hotkeys)
@@ -330,11 +354,19 @@ void HelloLooperAudioProcessorEditor::exportButtonClicked ()
         {
             ReferenceCountedBuffer::Ptr retainedCurrentBuffer (processor.currentBuffer);
             AudioSampleBuffer* currentAudioSampleBuffer (retainedCurrentBuffer->getAudioSampleBuffer());
-            int position = positionSlider.getValue() * systemSampleRate;
+            int position = positionSlider.getValue() * systemSampleRate * sampleDuration;
             int numSamples =  systemSampleRate * 60 / tempoSlider.getValue();
             writer->writeFromAudioSampleBuffer(*currentAudioSampleBuffer, position, numSamples);
         }
     }
+}
+
+void HelloLooperAudioProcessorEditor::analyzeButtonClicked ()
+{
+    static KeyFinder::KeyFinder key_finder_object;
+    chord_analyzer.analyze(processor.currentSampleRate, 2, processor.samplesPerBeat, processor.currentBuffer, processor.positionSamples);
+    auto r =  key_finder_object.keyOfAudio(chord_analyzer.audio_data);
+    DBG("key is " << r);
 }
 
 void HelloLooperAudioProcessorEditor::syncTempoButtonClicked ()
@@ -406,6 +438,9 @@ void HelloLooperAudioProcessorEditor::positionSliderChanged()
 
 void HelloLooperAudioProcessorEditor::tempoSliderChanged ()
 {
-    processor.samplesPerBeat = static_cast<int>(((60 / tempoSlider.getValue()) *
-                                                 processor.currentSampleRate));
+    int samples_expected = ((60 / tempoSlider.getValue()) *
+                                                 processor.currentSampleRate);
+//    int n_samples = processor.currentSampleRate * sampleDuration;
+
+    processor.samplesPerBeat = static_cast<int>(samples_expected);
 }

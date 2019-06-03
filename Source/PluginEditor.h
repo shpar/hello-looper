@@ -1,11 +1,19 @@
 /*
-  ==============================================================================
+    hello looper - a simple one-beat sampler
+    Copyright (C) 2019 Dan Grahelj
 
-    This file was auto-generated!
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    It contains the basic framework code for a JUCE plugin editor.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  ==============================================================================
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #pragma once
@@ -13,6 +21,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 #include "ReferenceCountedObject.h"
+#include "Analyzer.h"
 #include "Hotkey.h"
 
 
@@ -47,6 +56,7 @@ private:
     void pauseButtonClicked ();
     void setButtonClicked ();
     void exportButtonClicked ();
+    void analyzeButtonClicked ();
     void syncTempoButtonClicked ();
     void syncBeatButtonClicked ();
     void hotkeyClicked (int hotkeyId);
@@ -56,7 +66,9 @@ private:
 
     Slider tempoSlider;
     Slider positionSlider;
-    TextButton openButton, clearButton, pauseButton, setButton, exportButton;
+    AudioProcessorValueTreeState::SliderAttachment tempoAttachment, positionAttachment;
+
+    TextButton openButton, clearButton, pauseButton, setButton, exportButton, analyzeButton;
     ToggleButton syncTempoButton, syncBeatButton;
 
     OwnedArray<Hotkey> hotkeys;
@@ -64,6 +76,9 @@ private:
     AudioFormatManager formatManager;
 
     int timerCountdown;
+    int sampleDuration;
+
+    Analyzer chord_analyzer;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelloLooperAudioProcessorEditor)
 };

@@ -16,35 +16,27 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
 #pragma once
+#include "ReferenceCountedObject.h"
+#include "keyfinder.h"
 
-class ReferenceCountedBuffer : public ReferenceCountedObject
+class Analyzer : public ReferenceCountedObject
 {
 public:
-    typedef ReferenceCountedObjectPtr<ReferenceCountedBuffer> Ptr;
+    Analyzer () {};
+    ~Analyzer () {};
+    void analyze(int sample_rate, int channels, int duration, ReferenceCountedBuffer::Ptr newBuffer, int current_position) {
+        audio_data.setFrameRate(sample_rate);
+        audio_data.setChannels(channels);
+        audio_data.addToSampleCount(duration);
+        DBG("position " << current_position);
 
-    ReferenceCountedBuffer (int numChannels, int64 numSamples)  :   position (0),
-                                                buffer (numChannels, numSamples)
-    {
-
+        const auto& audio_sample_buffer = newBuffer->getAudioSampleBuffer();
+        for (int j = 0; j < channels; ++j) {
+            for (int i = 0; i < duration; ++i)
+                audio_data.setSample(i, audio_sample_buffer->getSample(j, i + current_position));
+        }
     }
 
-    ~ReferenceCountedBuffer()
-    {
-
-    }
-
-    AudioSampleBuffer* getAudioSampleBuffer()
-    {
-        return &buffer;
-    }
-
-    int position;
-
-private:
-    AudioSampleBuffer buffer;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ReferenceCountedBuffer)
+    KeyFinder::AudioData audio_data;
 };

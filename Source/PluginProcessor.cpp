@@ -1,11 +1,19 @@
 /*
-  ==============================================================================
+    hello looper - a simple one-beat sampler
+    Copyright (C) 2019 Dan Grahelj
 
-    This file was auto-generated!
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    It contains the basic framework code for a JUCE plugin processor.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  ==============================================================================
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "PluginProcessor.h"
@@ -25,7 +33,9 @@ HelloLooperAudioProcessor::HelloLooperAudioProcessor()
                      #endif
                        ), currentPosition(0), currentSampleRate(44100), samplesPerBeat(22050),
                         positionSamples(0), syncOffsetSamples(0), playing(true), setButtonOn(false),
-                        syncBeat(true)
+                        syncBeat(true), state (*this, nullptr, "state",
+           { std::make_unique<AudioParameterFloat> ("tempo", "Tempo", NormalisableRange<float> (1.0f, 300.0f), 120.0f),
+             std::make_unique<AudioParameterFloat> ("position", "Position", NormalisableRange<float> (0.0f, 1.0f), 0.0f) })
 #endif
 {
     infoFromHost.resetToDefault();
@@ -138,6 +148,8 @@ void HelloLooperAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuf
 
     Sampler.processAudio(buffer, currentBuffer, totalNumInputChannels, totalNumOutputChannels,
                          playing, samplesPerBeat, positionSamples, syncOffsetSamples, syncBeat);
+//    ChordAnalyzer.processAudio(buffer, currentBuffer, totalNumInputChannels, totalNumOutputChannels,
+//                     playing, samplesPerBeat, positionSamples, syncOffsetSamples, syncBeat);
     syncBeat = false;
     getPlaybackPositionFromHost();
 }
@@ -156,10 +168,21 @@ AudioProcessorEditor* HelloLooperAudioProcessor::createEditor()
 //==============================================================================
 void HelloLooperAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
+        // Store an xml representation of our state.
+        std::unique_ptr<XmlElement> xmlState (state.copyState().createXml());
+
+        if (xmlState.get() != nullptr)
+            copyXmlToBinary (*xmlState, destData);
 }
 
 void HelloLooperAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
+        // Restore our plug-in's state from the xml representation stored in the above
+        // method.
+        std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+
+        if (xmlState.get() != nullptr)
+            state.replaceState (ValueTree::fromXml (*xmlState));
 }
 
 void HelloLooperAudioProcessor::updatePosition()

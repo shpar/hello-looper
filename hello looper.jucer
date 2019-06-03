@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="MN8ro9" name="hello looper" displaySplashScreen="1" reportAppUsage="1"
-              splashScreenColour="Dark" projectType="audioplug" version="1.0.0"
+              splashScreenColour="Dark" projectType="audioplug" version="1.0.1"
               bundleIdentifier="com.yourcompany.hellolooper" includeBinaryInAppConfig="1"
               cppLanguageStandard="latest" companyCopyright="" buildVST="1"
               buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0" buildAAX="0"
               buildStandalone="1" enableIAA="0" pluginName="hello looper" pluginDesc="hello looper"
               pluginManufacturer="Dan Grahelj" pluginManufacturerCode="Manu"
-              pluginCode="Mn8r" pluginChannelConfigs="" pluginIsSynth="1" pluginWantsMidiIn="0"
+              pluginCode="Mn8r" pluginChannelConfigs="" pluginIsSynth="0" pluginWantsMidiIn="0"
               pluginProducesMidiOut="0" pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="hellolooperAU" pluginRTASCategory="" aaxIdentifier="com.yourcompany.hellolooper"
-              pluginAAXCategory="AAX_ePlugInCategory_Dynamics" jucerVersion="5.2.0">
+              pluginAAXCategory="2" jucerVersion="5.4.3" pluginFormats="buildVST,buildAU,buildStandalone"
+              pluginRTASDisableBypass="0" pluginRTASDisableMultiMono="0" pluginAAXDisableBypass="0"
+              pluginAAXDisableMultiMono="0" companyName="Dan Grahelj" pluginCharacteristicsValue="pluginIsSynth">
   <MAINGROUP id="m2F0Xf" name="hello looper">
     <GROUP id="{F3E4F728-116B-ECCA-20BA-0612FBCF10B2}" name="Source">
-      <FILE id="xTU8tO" name="RenderAudio.h" compile="0" resource="0" file="Source/RenderAudio.h"/>
+      <FILE id="xTU8tO" name="Analyzer.h" compile="0" resource="0" file="Source/Analyzer.h"/>
+      <FILE id="jmGm0X" name="RenderAudio.h" compile="0" resource="0" file="Source/RenderAudio.h"/>
       <FILE id="sHHuwE" name="ReferenceCountedObject.h" compile="0" resource="0"
             file="Source/ReferenceCountedObject.h"/>
       <FILE id="RbRNOf" name="Hotkey.h" compile="0" resource="0" file="Source/Hotkey.h"/>
@@ -27,12 +30,14 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="keyfinder.2.2.1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" enablePluginBinaryCopyStep="1" isDebug="1" optimisation="1"
-                       linkTimeOptimisation="0" targetName="hello looper"/>
+                       linkTimeOptimisation="0" targetName="hello looper" libraryPath="../../libKeyFinder"
+                       headerPath="../../libKeyFinder"/>
         <CONFIGURATION name="Release" enablePluginBinaryCopyStep="1" isDebug="0" optimisation="3"
-                       linkTimeOptimisation="1" targetName="hello looper"/>
+                       linkTimeOptimisation="1" targetName="hello looper" libraryPath="../../libKeyFinder"
+                       headerPath="../../libKeyFinder"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../JUCE/modules"/>
@@ -72,4 +77,7 @@
     <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
   <JUCEOPTIONS JUCE_QUICKTIME="disabled"/>
+  <LIVE_SETTINGS>
+    <OSX/>
+  </LIVE_SETTINGS>
 </JUCERPROJECT>
