@@ -138,14 +138,26 @@ void HelloLooperAudioProcessorEditor::paintIfNoFileLoaded (Graphics& g, const Re
 
 void HelloLooperAudioProcessorEditor::paintIfFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds)
 {
-    g.setColour (Colours::white);
+    g.setColour (Colours::black);
     g.fillRect (thumbnailBounds);
-    g.setColour (Colours::red);                                     // [8]
-    thumbnail.drawChannels (g,                                      // [9]
+    g.setColour (Colours::white);
+    thumbnail.drawChannels (g,
                             thumbnailBounds,
-                            0.0,                                    // start time
-                            thumbnail.getTotalLength(),             // end time
-                            1.0f);                                  // vertical zoom
+                            0.0,
+                            thumbnail.getTotalLength(),
+                            1.0f);
+//    g.setColour (Colours::red);
+    auto audioPositionPercent = (processor.positionSamples / sampleDuration / processor.currentSampleRate);
+    auto audioLoopLengthPercent = (processor.samplesPerBeat / sampleDuration / processor.currentSampleRate);
+    auto drawPosition (audioPositionPercent * thumbnailBounds.getWidth()
+                       + thumbnailBounds.getX());
+//    g.drawLine (drawPosition, thumbnailBounds.getY(), drawPosition,
+//                thumbnailBounds.getBottom(), 2.0f);
+    DBG("audioPositionPercent" << audioPositionPercent << " drawPosition " << drawPosition);
+    auto transparent_blue = Colours::blue;
+    g.setColour(transparent_blue.withAlpha(0.5f));
+    Rectangle<int> thumbnailLoopRect (drawPosition, thumbnailBounds.getY(), audioLoopLengthPercent * thumbnailBounds.getWidth(), thumbnailBounds.getHeight());
+    g.fillRect (thumbnailLoopRect);
 }
 
 void HelloLooperAudioProcessorEditor::resized()
@@ -237,6 +249,7 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen()
 void HelloLooperAudioProcessorEditor::updatePosition()
 {
     processor.positionSamples = positionSlider.getValue() * processor.currentSampleRate * sampleDuration;
+    repaint();
 }
 
 void HelloLooperAudioProcessorEditor::timerCallback()
@@ -479,6 +492,7 @@ void HelloLooperAudioProcessorEditor::tempoSliderChanged ()
 //    int n_samples = processor.currentSampleRate * sampleDuration;
 
     processor.samplesPerBeat = static_cast<int>(samples_expected);
+    repaint();
 }
 
 void HelloLooperAudioProcessorEditor::changeListenerCallback (ChangeBroadcaster* source)
