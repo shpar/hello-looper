@@ -23,9 +23,11 @@
 //==============================================================================
 HelloLooperAudioProcessorEditor::HelloLooperAudioProcessorEditor (HelloLooperAudioProcessor& p):
 AudioProcessorEditor (&p), Thread ("Background Thread"), processor (p), tempoAttachment (p.state, "tempo",  tempoSlider),
-              positionAttachment (p.state, "position", positionSlider)
+              positionAttachment (p.state, "position", positionSlider), thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache)
 {
-    setSize (400, 200);
+    setSize (400, 400);
+
+    thumbnail.addChangeListener(this);
 
     addAndMakeVisible (tempoSlider);
     tempoSlider.setRange (1, 300, 1);
@@ -119,6 +121,31 @@ HelloLooperAudioProcessorEditor::~HelloLooperAudioProcessorEditor()
 void HelloLooperAudioProcessorEditor::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    Rectangle<int> thumbnailBounds (10, 190, getWidth() - 20, 200);
+    if (thumbnail.getNumChannels() == 0)
+        paintIfNoFileLoaded (g, thumbnailBounds);
+    else
+        paintIfFileLoaded (g, thumbnailBounds);
+}
+
+void HelloLooperAudioProcessorEditor::paintIfNoFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds)
+{
+    g.setColour (Colours::darkgrey);
+    g.fillRect (thumbnailBounds);
+    g.setColour (Colours::white);
+    g.drawFittedText ("No File Loaded", thumbnailBounds, Justification::centred, 1.0f);
+}
+
+void HelloLooperAudioProcessorEditor::paintIfFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds)
+{
+    g.setColour (Colours::white);
+    g.fillRect (thumbnailBounds);
+    g.setColour (Colours::red);                                     // [8]
+    thumbnail.drawChannels (g,                                      // [9]
+                            thumbnailBounds,
+                            0.0,                                    // start time
+                            thumbnail.getTotalLength(),             // end time
+                            1.0f);                                  // vertical zoom
 }
 
 void HelloLooperAudioProcessorEditor::resized()
@@ -199,6 +226,10 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen()
                               true);
             processor.currentBuffer = newBuffer;
             processor.buffers.add (newBuffer);
+            {
+                const MessageManagerLock mmLock;
+                thumbnail.setSource(new FileInputSource (file));
+            }
         }
     }
 }
@@ -364,9 +395,14 @@ void HelloLooperAudioProcessorEditor::exportButtonClicked ()
 void HelloLooperAudioProcessorEditor::analyzeButtonClicked ()
 {
     static KeyFinder::KeyFinder key_finder_object;
-    chord_analyzer.analyze(processor.currentSampleRate, 2, processor.samplesPerBeat, processor.currentBuffer, processor.positionSamples);
-    auto r =  key_finder_object.keyOfAudio(chord_analyzer.audio_data);
-    DBG("key is " << r);
+    int position_scanned = 0;
+    for (int i = 0; i < 10; ++i) {
+        chord_analyzer.analyze(processor.currentSampleRate, 2, processor.samplesPerBeat, processor.currentBuffer, position_scanned);
+        auto r =  key_finder_object.keyOfAudio(chord_analyzer.audio_data);
+        chord_analyzer.sample_analysis.emplace(position_scanned, r);
+        DBG("key is " << key_name[r]);
+        position_scanned += processor.samplesPerBeat;
+    }
 }
 
 void HelloLooperAudioProcessorEditor::syncTempoButtonClicked ()
@@ -443,4 +479,14 @@ void HelloLooperAudioProcessorEditor::tempoSliderChanged ()
 //    int n_samples = processor.currentSampleRate * sampleDuration;
 
     processor.samplesPerBeat = static_cast<int>(samples_expected);
+}
+
+void HelloLooperAudioProcessorEditor::changeListenerCallback (ChangeBroadcaster* source)
+{
+    if (source == &thumbnail)       thumbnailChanged();
+}
+
+void HelloLooperAudioProcessorEditor::thumbnailChanged()
+{
+    repaint();
 }

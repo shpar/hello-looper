@@ -19,6 +19,7 @@
 #pragma once
 #include "ReferenceCountedObject.h"
 #include "keyfinder.h"
+#include <array>
 
 class Analyzer : public ReferenceCountedObject
 {
@@ -39,4 +40,33 @@ public:
     }
 
     KeyFinder::AudioData audio_data;
+    std::map<int, int> sample_analysis;
+};
+
+const std::array<std::string, 25> key_name = {
+    "A",
+    "Am",
+    "Bb",
+    "Bbm",
+    "B",
+    "Bm",
+    "C",
+    "Cm",
+    "Db",
+    "Dbm",
+    "D",
+    "Dm",
+    "Eb",
+    "Ebm",
+    "E",
+    "Em",
+    "F",
+    "Fm",
+    "Gb",
+    "Gbm",
+    "G",
+    "Gm",
+    "Ab",
+    "Abm",
+    "/"
 };

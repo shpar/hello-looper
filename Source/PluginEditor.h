@@ -31,7 +31,8 @@ class HelloLooperAudioProcessorEditor  :    public AudioProcessorEditor,
                                             private Slider::Listener,
                                             private Button::Listener,
                                             private Thread,
-                                            private Timer
+                                            private Timer,
+                                            private ChangeListener
 {
 public:
     HelloLooperAudioProcessorEditor (HelloLooperAudioProcessor&);
@@ -43,6 +44,7 @@ public:
     void buttonClicked (Button* button) override;
     void sliderValueChanged (Slider* slider) override;
     void timerCallback () override;
+    void changeListenerCallback (ChangeBroadcaster* source) override;
 
 private:
     HelloLooperAudioProcessor& processor;
@@ -63,6 +65,9 @@ private:
     void positionSliderChanged ();
     void tempoSliderChanged ();
     void updateTempo (AudioPlayHead::CurrentPositionInfo);
+    void thumbnailChanged();
+    void paintIfNoFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds);
+    void paintIfFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds);
 
     Slider tempoSlider;
     Slider positionSlider;
@@ -79,6 +84,8 @@ private:
     int sampleDuration;
 
     Analyzer chord_analyzer;
+    AudioThumbnailCache thumbnailCache;
+    AudioThumbnail thumbnail;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelloLooperAudioProcessorEditor)
 };
