@@ -4,7 +4,7 @@
 
 A simple one beat looper with pause/play functionality, tempo and start time sliders and four hotkeys to save positions in the file. It also allows to sync the tempo and beat to the host DAW and to export the current beat as a wave file.
 
-![hello looper v1.0.2](Img/hello_looper_1.0.2.png?raw=true "hello looper v1.0.2")
+<img src="Img/hello_looper_1.0.2.png?raw=true" alt="hello looper v1.0.2" width="350"/>
 
 ### v1.0.1
 
