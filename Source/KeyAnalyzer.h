@@ -18,14 +18,18 @@
 
 #pragma once
 #include "keyfinder.h"
+#include "ReferenceCountedObject.h"
 #include <array>
 
-class KeyAnalyzer
-{
+class KeyAnalyzer {
 public:
-    KeyAnalyzer () {};
-    ~KeyAnalyzer () {};
-    void analyze(int sample_rate, int channels, int duration, ReferenceCountedBuffer::Ptr newBuffer, int current_position) {
+    KeyAnalyzer(){};
+    ~KeyAnalyzer(){};
+    void analyze(int sample_rate,
+                 int channels,
+                 int duration,
+                 ReferenceCountedBuffer::Ptr newBuffer,
+                 int current_position) {
         audio_data.setFrameRate(sample_rate);
         audio_data.setChannels(channels);
         audio_data.addToSampleCount(duration);
@@ -39,33 +43,9 @@ public:
 
     KeyFinder::AudioData audio_data;
     std::vector<std::pair<std::pair<int, int>, int>> key_ranges;
-    int brackets_for_analysis {50};
+    int brackets_for_analysis{50};
 };
 
 const std::array<std::string, 25> key_name = {
-    "A",
-    "Am",
-    "Bb",
-    "Bbm",
-    "B",
-    "Bm",
-    "C",
-    "Cm",
-    "Db",
-    "Dbm",
-    "D",
-    "Dm",
-    "Eb",
-    "Ebm",
-    "E",
-    "Em",
-    "F",
-    "Fm",
-    "Gb",
-    "Gbm",
-    "G",
-    "Gm",
-    "Ab",
-    "Abm",
-    "/"
-};
+    "A",   "Am", "Bb", "Bbm", "B",  "Bm", "C",   "Cm", "Db", "Dbm", "D",   "Dm", "Eb",
+    "Ebm", "E",  "Em", "F",   "Fm", "Gb", "Gbm", "G",  "Gm", "Ab",  "Abm", "/"};

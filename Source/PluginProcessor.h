@@ -19,30 +19,27 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "RenderAudio.h"
 #include "KeyAnalyzer.h"
 #include "ReferenceCountedObject.h"
-
+#include "RenderAudio.h"
 
 //==============================================================================
 
-class HelloLooperAudioProcessor  : public AudioProcessor,
-                                    public ReferenceCountedObject
-{
+class HelloLooperAudioProcessor : public AudioProcessor, public ReferenceCountedObject {
 public:
     //==============================================================================
     HelloLooperAudioProcessor();
     ~HelloLooperAudioProcessor();
 
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+#ifndef JucePlugin_PreferredChannelConfigurations
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+#endif
 
-    void processBlock (AudioSampleBuffer&, MidiBuffer&) override;
+    void processBlock(AudioSampleBuffer&, MidiBuffer&) override;
 
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
@@ -53,19 +50,19 @@ public:
 
     bool acceptsMidi() const override;
     bool producesMidi() const override;
-    bool isMidiEffect () const override;
+    bool isMidiEffect() const override;
     double getTailLengthSeconds() const override;
 
     //==============================================================================
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const String getProgramName (int index) override;
-    void changeProgramName (int index, const String& newName) override;
+    void setCurrentProgram(int index) override;
+    const String getProgramName(int index) override;
+    void changeProgramName(int index, const String& newName) override;
 
     //==============================================================================
-    void getStateInformation (MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
 
     double currentSampleRate;
     std::atomic<double> samplesPerBeat;
@@ -77,7 +74,6 @@ public:
     AudioPlayHead::CurrentPositionInfo infoFromHost;
     AudioProcessorValueTreeState state;
 
-
     void getPlaybackPositionFromHost();
 
 private:
@@ -85,5 +81,5 @@ private:
     RenderAudio Sampler;
     KeyAnalyzer KeyAnalyzer;
     void updatePosition();
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelloLooperAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HelloLooperAudioProcessor)
 };

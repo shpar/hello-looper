@@ -18,36 +18,20 @@
 
 #pragma once
 
-class Hotkey : public TextButton
-{
+class Hotkey : public TextButton {
 public:
-    Hotkey(int hotkeyId): hotkey(std::to_string(hotkeyId)), position(0), positionSaved(false) {}
+    Hotkey(int hotkeyId) : hotkey(std::to_string(hotkeyId)), position(0), positionSaved(false) {}
     ~Hotkey() {}
 
-    void setPosition(double position)
-    {
-        this->position = position;
-    }
+    void setPosition(double position) { this->position = position; }
 
-    double getPosition()
-    {
-        return position;
-    }
+    double getPosition() { return position; }
 
-    void setActive()
-    {
-        positionSaved = true;
-    }
+    void setActive() { positionSaved = true; }
 
-    void setInactive()
-    {
-        positionSaved = false;
-    }
+    void setInactive() { positionSaved = false; }
 
-    bool isActive()
-    {
-        return positionSaved;
-    }
+    bool isActive() { return positionSaved; }
 
 private:
     TextButton hotkey;
@@ -55,5 +39,5 @@ private:
     double position;
     bool positionSaved;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Hotkey)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Hotkey)
 };

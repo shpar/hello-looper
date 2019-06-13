@@ -20,44 +20,42 @@
 
 #pragma once
 
-class RenderAudio : public ReferenceCountedObject
-{
+class RenderAudio : public ReferenceCountedObject {
 public:
-    RenderAudio () {};
-    ~RenderAudio () {};
-    void processAudio (AudioSampleBuffer& bufferToFill, ReferenceCountedBuffer::Ptr& currentBuffer,
-                       const int totalNumInputChannels, const int totalNumOutputChannels, bool playing,
-                       int samplesPerBeat, std::atomic<int>& positionSamples, int syncOffsetSamples, bool syncBeat)
-    {
-        ReferenceCountedBuffer::Ptr retainedCurrentBuffer (currentBuffer);
+    RenderAudio(){};
+    ~RenderAudio(){};
+    void processAudio(AudioSampleBuffer& bufferToFill,
+                      ReferenceCountedBuffer::Ptr& currentBuffer,
+                      const int totalNumInputChannels,
+                      const int totalNumOutputChannels,
+                      bool playing,
+                      int samplesPerBeat,
+                      std::atomic<int>& positionSamples,
+                      int syncOffsetSamples,
+                      bool syncBeat) {
+        ReferenceCountedBuffer::Ptr retainedCurrentBuffer(currentBuffer);
 
-        if (retainedCurrentBuffer == nullptr || playing == false)
-        {
-            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-            {
-                bufferToFill.clear (i, 0, bufferToFill.getNumSamples());
+        if (retainedCurrentBuffer == nullptr || playing == false) {
+            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
+                bufferToFill.clear(i, 0, bufferToFill.getNumSamples());
             }
-        }
-        else
-        {
-            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-            {
-                bufferToFill.clear (i, 0, bufferToFill.getNumSamples());
+        } else {
+            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
+                bufferToFill.clear(i, 0, bufferToFill.getNumSamples());
             }
 
-            AudioSampleBuffer* currentAudioSampleBuffer (retainedCurrentBuffer->getAudioSampleBuffer());
+            AudioSampleBuffer* currentAudioSampleBuffer(
+                retainedCurrentBuffer->getAudioSampleBuffer());
             int position = retainedCurrentBuffer->position;
 
             // sync the beat with the host
-            if (syncOffsetSamples > 0 && syncBeat)
-            {
+            if (syncOffsetSamples > 0 && syncBeat) {
                 syncBeat = false;
                 position = positionSamples + samplesPerBeat - syncOffsetSamples;
             }
             int currentPositionSamples = positionSamples;
 
-            if (position < currentPositionSamples)
-                position = currentPositionSamples;
+            if (position < currentPositionSamples) position = currentPositionSamples;
 
             const int bufferInputChannels = currentAudioSampleBuffer->getNumChannels();
 
@@ -65,35 +63,28 @@ public:
             int outputSamplesOffset = 0;
 
             // loop one bar from selected position
-            while (outputSamplesRemaining > 0)
-            {
-                int bufferSamplesRemainingFile = currentAudioSampleBuffer->getNumSamples()
-                                               - position;
-                if (position > samplesPerBeat + currentPositionSamples)
-                {
+            while (outputSamplesRemaining > 0) {
+                int bufferSamplesRemainingFile =
+                    currentAudioSampleBuffer->getNumSamples() - position;
+                if (position > samplesPerBeat + currentPositionSamples) {
                     position = currentPositionSamples;
                 }
                 int bufferSamplesRemainingBeat = samplesPerBeat - position + currentPositionSamples;
-                int bufferSamplesRemaining = jmin (bufferSamplesRemainingBeat,
-                                               bufferSamplesRemainingFile);
+                int bufferSamplesRemaining =
+                    jmin(bufferSamplesRemainingBeat, bufferSamplesRemainingFile);
 
                 // NOT WORKING
                 if (bufferSamplesRemainingBeat > 0 && bufferSamplesRemainingFile <= 0) {
-                    for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-                        {
-                            bufferToFill.clear (i, position, outputSamplesRemaining);
-                        }
+                    for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
+                        bufferToFill.clear(i, position, outputSamplesRemaining);
+                    }
                 }
                 // END OF
-                int samplesThisTime = jmin (outputSamplesRemaining, bufferSamplesRemaining);
+                int samplesThisTime = jmin(outputSamplesRemaining, bufferSamplesRemaining);
 
-                for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-                {
-                    bufferToFill.copyFrom (channel, outputSamplesOffset,
-                                               *currentAudioSampleBuffer,
-                                               channel % bufferInputChannels,
-                                               position,
-                                               samplesThisTime);
+                for (int channel = 0; channel < totalNumOutputChannels; ++channel) {
+                    bufferToFill.copyFrom(channel, outputSamplesOffset, *currentAudioSampleBuffer,
+                                          channel % bufferInputChannels, position, samplesThisTime);
                 }
 
                 outputSamplesRemaining -= samplesThisTime;
@@ -101,13 +92,12 @@ public:
                 position += samplesThisTime;
 
                 if (position == currentAudioSampleBuffer->getNumSamples() ||
-                    position >= currentPositionSamples + samplesPerBeat)
-                {
+                    position >= currentPositionSamples + samplesPerBeat) {
                     position = positionSamples;
                 }
                 retainedCurrentBuffer->position = position;
             }
         }
     };
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RenderAudio)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RenderAudio)
 };

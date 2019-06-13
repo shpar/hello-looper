@@ -19,55 +19,53 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "Hotkey.h"
+#include "KeyAnalyzer.h"
 #include "PluginProcessor.h"
 #include "ReferenceCountedObject.h"
-#include "KeyAnalyzer.h"
-#include "Hotkey.h"
-
 
 //==============================================================================
-class HelloLooperAudioProcessorEditor  :    public AudioProcessorEditor,
-                                            public ReferenceCountedObject,
-                                            private Slider::Listener,
-                                            private Button::Listener,
-                                            private Thread,
-                                            private Timer,
-                                            private ChangeListener
-{
+class HelloLooperAudioProcessorEditor : public AudioProcessorEditor,
+                                        public ReferenceCountedObject,
+                                        private Slider::Listener,
+                                        private Button::Listener,
+                                        private Thread,
+                                        private Timer,
+                                        private ChangeListener {
 public:
-    HelloLooperAudioProcessorEditor (HelloLooperAudioProcessor&);
+    HelloLooperAudioProcessorEditor(HelloLooperAudioProcessor&);
     ~HelloLooperAudioProcessorEditor();
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint(Graphics&) override;
     void resized() override;
-    void buttonClicked (Button* button) override;
-    void sliderValueChanged (Slider* slider) override;
-    void timerCallback () override;
-    void changeListenerCallback (ChangeBroadcaster* source) override;
+    void buttonClicked(Button* button) override;
+    void sliderValueChanged(Slider* slider) override;
+    void timerCallback() override;
+    void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
     HelloLooperAudioProcessor& processor;
 
     void run() override;
-    void checkForBuffersToFree ();
-    void checkForPathToOpen ();
+    void checkForBuffersToFree();
+    void checkForPathToOpen();
     void updatePosition();
-    void openButtonClicked ();
-    void clearButtonClicked ();
-    void pauseButtonClicked ();
-    void setButtonClicked ();
-    void exportButtonClicked ();
-    void analyzeButtonClicked ();
-    void syncTempoButtonClicked ();
-    void syncBeatButtonClicked ();
-    void hotkeyClicked (int hotkeyId);
-    void positionSliderChanged ();
-    void tempoSliderChanged ();
-    void updateTempo (AudioPlayHead::CurrentPositionInfo);
+    void openButtonClicked();
+    void clearButtonClicked();
+    void pauseButtonClicked();
+    void setButtonClicked();
+    void exportButtonClicked();
+    void analyzeButtonClicked();
+    void syncTempoButtonClicked();
+    void syncBeatButtonClicked();
+    void hotkeyClicked(int hotkeyId);
+    void positionSliderChanged();
+    void tempoSliderChanged();
+    void updateTempo(AudioPlayHead::CurrentPositionInfo);
     void thumbnailChanged();
-    void paintIfNoFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds);
-    void paintIfFileLoaded (Graphics& g, const Rectangle<int>& thumbnailBounds);
+    void paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
+    void paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
 
     Slider tempoSlider;
     Slider positionSlider;
@@ -87,5 +85,5 @@ private:
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelloLooperAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HelloLooperAudioProcessorEditor)
 };
