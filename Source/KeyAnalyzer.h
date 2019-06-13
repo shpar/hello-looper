@@ -17,20 +17,18 @@
 */
 
 #pragma once
-#include "ReferenceCountedObject.h"
 #include "keyfinder.h"
 #include <array>
 
-class Analyzer : public ReferenceCountedObject
+class KeyAnalyzer
 {
 public:
-    Analyzer () {};
-    ~Analyzer () {};
+    KeyAnalyzer () {};
+    ~KeyAnalyzer () {};
     void analyze(int sample_rate, int channels, int duration, ReferenceCountedBuffer::Ptr newBuffer, int current_position) {
         audio_data.setFrameRate(sample_rate);
         audio_data.setChannels(channels);
         audio_data.addToSampleCount(duration);
-        DBG("position " << current_position);
 
         const auto& audio_sample_buffer = newBuffer->getAudioSampleBuffer();
         for (int j = 0; j < channels; ++j) {
@@ -40,7 +38,8 @@ public:
     }
 
     KeyFinder::AudioData audio_data;
-    std::map<int, int> sample_analysis;
+    std::vector<std::pair<std::pair<int, int>, int>> key_ranges;
+    int brackets_for_analysis {50};
 };
 
 const std::array<std::string, 25> key_name = {

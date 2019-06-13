@@ -20,7 +20,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "RenderAudio.h"
-#include "Analyzer.h"
+#include "KeyAnalyzer.h"
 #include "ReferenceCountedObject.h"
 
 
@@ -67,9 +67,10 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    double currentPosition, currentSampleRate, samplesPerBeat;
-    int positionSamples, syncOffsetSamples;
-    bool playing, setButtonOn, syncBeat;
+    double currentSampleRate;
+    std::atomic<double> samplesPerBeat;
+    std::atomic<int> positionSamples, syncOffsetSamples;
+    std::atomic<bool> playing, setButtonOn, syncBeat;
     ReferenceCountedArray<ReferenceCountedBuffer> buffers;
     ReferenceCountedBuffer::Ptr currentBuffer;
 
@@ -82,7 +83,7 @@ public:
 private:
     //==============================================================================
     RenderAudio Sampler;
-    Analyzer ChordAnalyzer;
+    KeyAnalyzer KeyAnalyzer;
     void updatePosition();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelloLooperAudioProcessor)
 };

@@ -146,43 +146,42 @@ void HelloLooperAudioProcessorEditor::paintIfFileLoaded (Graphics& g, const Rect
                             0.0,
                             thumbnail.getTotalLength(),
                             1.0f);
-//    g.setColour (Colours::red);
     auto audioPositionPercent = (processor.positionSamples / sampleDuration / processor.currentSampleRate);
     auto audioLoopLengthPercent = (processor.samplesPerBeat / sampleDuration / processor.currentSampleRate);
     auto drawPosition (audioPositionPercent * thumbnailBounds.getWidth()
                        + thumbnailBounds.getX());
-//    g.drawLine (drawPosition, thumbnailBounds.getY(), drawPosition,
-//                thumbnailBounds.getBottom(), 2.0f);
-    DBG("audioPositionPercent" << audioPositionPercent << " drawPosition " << drawPosition);
-    auto transparent_blue = Colours::blue;
-    g.setColour(transparent_blue.withAlpha(0.5f));
-    Rectangle<int> thumbnailLoopRect (drawPosition, thumbnailBounds.getY(), audioLoopLengthPercent * thumbnailBounds.getWidth(), thumbnailBounds.getHeight());
-    g.fillRect (thumbnailLoopRect);
 
-    // analysis results
-
-    if (!chord_analyzer.sample_analysis.empty()) {
-        auto current_key = chord_analyzer.sample_analysis.at(0);
+    if (!chord_analyzer.key_ranges.empty()) {
+        auto current_key = chord_analyzer.key_ranges.at(0).second;
         auto current_color = Colours::red;
         current_color = current_color.withAlpha(0.3f);
         auto original_color = current_color;
-        int percent_of_song_length = sampleDuration * processor.currentSampleRate / 100;
+        int percent_of_song_length = sampleDuration * processor.currentSampleRate / chord_analyzer.brackets_for_analysis;
         g.setColour(current_color);
-        for (const auto& entry : chord_analyzer.sample_analysis) {
-            DBG(" first " << entry.first << " second " << entry.second);
+        for (const auto& entry : chord_analyzer.key_ranges) {
             if (entry.second != current_key) {
                 current_color = original_color.withRotatedHue(0.5f * entry.second / 24);
                 g.setColour(current_color);
             }
 
-            auto keyPositionPercent = (entry.first / sampleDuration / processor.currentSampleRate);
-            auto keyPositionLength = (percent_of_song_length / sampleDuration / processor.currentSampleRate);
-            Rectangle<int> keyRectangle (keyPositionPercent * thumbnailBounds.getWidth()
-                       + thumbnailBounds.getX(), thumbnailBounds.getY(), keyPositionLength * thumbnailBounds.getWidth(), thumbnailBounds.getHeight());
+            auto keyPositionPercent = (entry.first.first / sampleDuration / processor.currentSampleRate);
+            auto keyPositionLength = ((entry.first.second - entry.first.first) / sampleDuration / processor.currentSampleRate);
+            Rectangle<int> keyRectangle (std::round(keyPositionPercent * thumbnailBounds.getWidth())
+                       + thumbnailBounds.getX(), thumbnailBounds.getY(),std::round(keyPositionLength * thumbnailBounds.getWidth()), thumbnailBounds.getHeight());
             g.fillRect(keyRectangle);
-
+            DBG("beginning" << std::round(keyPositionPercent * thumbnailBounds.getWidth()
+                       + thumbnailBounds.getX()) << " length " << std::round(keyPositionLength * thumbnailBounds.getWidth()));
+            if (std::round(keyPositionLength * thumbnailBounds.getWidth()) > 12) {
+                g.setColour (Colours::white);
+                g.drawFittedText (key_name[entry.second], keyRectangle, Justification::centred, 1.0f);
+            }
         }
+        g.setColour(Colours::black);
+    } else {
+        g.setColour(Colours::red);
     }
+    Rectangle<int> thumbnailLoopRect (drawPosition, thumbnailBounds.getY(), audioLoopLengthPercent * thumbnailBounds.getWidth(), thumbnailBounds.getHeight());
+    g.drawRect (thumbnailLoopRect, 2.0f);
 }
 
 void HelloLooperAudioProcessorEditor::resized()
@@ -248,7 +247,7 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen()
             duration = jmin (60, duration);
             sampleDuration = duration;
 
-            DBG("sample duration " << duration);
+//            DBG("sample duration " << duration);
 
 //            positionSlider.setRange(0, duration);
 
@@ -374,6 +373,7 @@ void HelloLooperAudioProcessorEditor::clearButtonClicked ()
         hotkey->setColour(0x1000100, findColour(0x1000100, false));
     }
     processor.setButtonOn = false;
+    thumbnail.clear();
 }
 
 void HelloLooperAudioProcessorEditor::pauseButtonClicked ()
@@ -433,14 +433,36 @@ void HelloLooperAudioProcessorEditor::exportButtonClicked ()
 void HelloLooperAudioProcessorEditor::analyzeButtonClicked ()
 {
     static KeyFinder::KeyFinder key_finder_object;
-    int n_bracket_analysis = 100;
+    int n_bracket_analysis = chord_analyzer.brackets_for_analysis;
     int percent_of_song_length = sampleDuration * processor.currentSampleRate / n_bracket_analysis;
-    // TODO: last bracket is shorter!
-    for (int i = 0; i < n_bracket_analysis - 1; ++i) {
+    KeyFinder::key_t previous_key;
+    int same_key_intervals;
+    for (int i = 0; i < n_bracket_analysis; ++i) {
         chord_analyzer.analyze(processor.currentSampleRate, 2, percent_of_song_length, processor.currentBuffer, percent_of_song_length * i);
         auto r =  key_finder_object.keyOfAudio(chord_analyzer.audio_data);
-        chord_analyzer.sample_analysis.emplace(percent_of_song_length * i, r);
-        DBG("key is " << key_name[r]);
+        if (i == 0) {
+            previous_key = r;
+            same_key_intervals = 0;
+        }
+        if (i > 0 && r != previous_key) {
+            std::pair<std::pair<int,int>, int> temp{{percent_of_song_length * (i - same_key_intervals), percent_of_song_length * i - 1}, previous_key};
+            chord_analyzer.key_ranges.emplace_back(temp);
+            previous_key = r;
+            same_key_intervals = 1;
+        } else {
+            ++same_key_intervals;
+        }
+
+        if (i == n_bracket_analysis - 1) {
+            int n_samples = std::round(sampleDuration * processor.currentSampleRate);
+            std::pair<std::pair<int,int>, int> temp;
+            if (same_key_intervals == 1) {
+                temp = {{percent_of_song_length * i, n_samples }, r};
+            } else {
+                temp = {{percent_of_song_length * (i - same_key_intervals + 1), n_samples}, r};
+            }
+            chord_analyzer.key_ranges.emplace_back(temp);
+        }
     }
     repaint();
 }

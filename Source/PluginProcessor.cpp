@@ -31,11 +31,11 @@ HelloLooperAudioProcessor::HelloLooperAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), currentPosition(0), currentSampleRate(44100), samplesPerBeat(22050),
+                       ), currentSampleRate(44100), samplesPerBeat(22050),
                         positionSamples(0), syncOffsetSamples(0), playing(true), setButtonOn(false),
                         syncBeat(true), state (*this, nullptr, "state",
-           { std::make_unique<AudioParameterFloat> ("tempo", "Tempo", NormalisableRange<float> (1.0f, 300.0f), 120.0f),
-             std::make_unique<AudioParameterFloat> ("position", "Position", NormalisableRange<float> (0.0f, 1.0f), 0.0f) })
+           { std::make_unique<AudioParameterFloat> ("tempo", "Tempo", NormalisableRange<float> (1.0f, 300.0f), 120.0f, String(), AudioProcessorParameter::genericParameter, [](float value, int max_string_length) { return String (value, 0); } ),
+             std::make_unique<AudioParameterFloat> ("position", "Position", NormalisableRange<float> (0.0f, 1.0f), 0.0f, String(), AudioProcessorParameter::genericParameter, [](float value, int max_string_length) { return String (value, 2); } ) })
 #endif
 {
     infoFromHost.resetToDefault();
@@ -148,8 +148,6 @@ void HelloLooperAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuf
 
     Sampler.processAudio(buffer, currentBuffer, totalNumInputChannels, totalNumOutputChannels,
                          playing, samplesPerBeat, positionSamples, syncOffsetSamples, syncBeat);
-//    ChordAnalyzer.processAudio(buffer, currentBuffer, totalNumInputChannels, totalNumOutputChannels,
-//                     playing, samplesPerBeat, positionSamples, syncOffsetSamples, syncBeat);
     syncBeat = false;
     getPlaybackPositionFromHost();
 }

@@ -15,7 +15,7 @@
               pluginAAXDisableMultiMono="0" companyName="Dan Grahelj" pluginCharacteristicsValue="pluginIsSynth">
   <MAINGROUP id="m2F0Xf" name="hello looper">
     <GROUP id="{F3E4F728-116B-ECCA-20BA-0612FBCF10B2}" name="Source">
-      <FILE id="xTU8tO" name="Analyzer.h" compile="0" resource="0" file="Source/Analyzer.h"/>
+      <FILE id="xTU8tO" name="KeyAnalyzer.h" compile="0" resource="0" file="Source/KeyAnalyzer.h"/>
       <FILE id="jmGm0X" name="RenderAudio.h" compile="0" resource="0" file="Source/RenderAudio.h"/>
       <FILE id="sHHuwE" name="ReferenceCountedObject.h" compile="0" resource="0"
             file="Source/ReferenceCountedObject.h"/>

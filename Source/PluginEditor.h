@@ -21,7 +21,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 #include "ReferenceCountedObject.h"
-#include "Analyzer.h"
+#include "KeyAnalyzer.h"
 #include "Hotkey.h"
 
 
@@ -83,7 +83,7 @@ private:
     int timerCountdown;
     int sampleDuration;
 
-    Analyzer chord_analyzer;
+    KeyAnalyzer chord_analyzer;
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
 

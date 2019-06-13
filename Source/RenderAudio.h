@@ -27,7 +27,7 @@ public:
     ~RenderAudio () {};
     void processAudio (AudioSampleBuffer& bufferToFill, ReferenceCountedBuffer::Ptr& currentBuffer,
                        const int totalNumInputChannels, const int totalNumOutputChannels, bool playing,
-                       int samplesPerBeat, int& positionSamples, int syncOffsetSamples, bool syncBeat)
+                       int samplesPerBeat, std::atomic<int>& positionSamples, int syncOffsetSamples, bool syncBeat)
     {
         ReferenceCountedBuffer::Ptr retainedCurrentBuffer (currentBuffer);
 
