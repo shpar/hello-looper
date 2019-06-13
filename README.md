@@ -6,9 +6,8 @@ A simple one beat looper with pause/play functionality, tempo and start time sli
 
 <img src="Img/hello_looper_1.0.2.png?raw=true" alt="hello looper v1.0.2" width="350"/>
 
-### v1.0.1
-
-Added feature to analyze musical key of beat
+* __v1.0.2__ - Thumbnail of file with detected keys
+* __v1.0.1__ - Added feature to analyze musical key of beat
 
 ## How to build
 
