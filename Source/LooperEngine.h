@@ -16,33 +16,48 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#pragma once
 #include "ReferenceCountedObject.h"
 
-#pragma once
+struct LooperEngineParameters {
+    int totalNumInputChannels = 2;
+    int totalNumOutputChannels = 2;
+    bool playing = false;
+    int samplesPerBeat = 512;
+    int positionSamples = 0;
+    int syncOffsetSamples = 0;
+    bool syncBeat = false;
+};
 
-class RenderAudio : public ReferenceCountedObject {
+class LooperEngine : public ReferenceCountedObject {
 public:
-    RenderAudio(){};
-    ~RenderAudio(){};
+    LooperEngine(){};
+    ~LooperEngine(){};
+    void updateProcessingParameters(LooperEngineParameters& inputParameters) {
+        currentParameters = inputParameters;
+    }
     void processAudio(AudioSampleBuffer& bufferToFill,
-                      ReferenceCountedBuffer::Ptr& currentBuffer,
-                      const int totalNumInputChannels,
-                      const int totalNumOutputChannels,
-                      bool playing,
-                      int samplesPerBeat,
-                      std::atomic<int>& positionSamples,
-                      int syncOffsetSamples,
-                      bool syncBeat) {
+                      ReferenceCountedBuffer::Ptr& currentBuffer) {
+
+        const int& totalNumInputChannels = currentParameters.totalNumInputChannels;
+        const int& totalNumOutputChannels = currentParameters.totalNumOutputChannels;
+        const bool& playing = currentParameters.playing;
+        const int& samplesPerBeat = currentParameters.samplesPerBeat;
+        const int& positionSamples = currentParameters.positionSamples;
+        const int& syncOffsetSamples = currentParameters.syncOffsetSamples;
+        bool& syncBeat = currentParameters.syncBeat;
         ReferenceCountedBuffer::Ptr retainedCurrentBuffer(currentBuffer);
 
+        auto clearBuffer = [&bufferToFill, &totalNumInputChannels, &totalNumOutputChannels] (int position, int numSamples) {
+            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
+                bufferToFill.clear(i, position, numSamples);
+            }
+        };
+
         if (retainedCurrentBuffer == nullptr || playing == false) {
-            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
-                bufferToFill.clear(i, 0, bufferToFill.getNumSamples());
-            }
+            clearBuffer(0, bufferToFill.getNumSamples());
         } else {
-            for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
-                bufferToFill.clear(i, 0, bufferToFill.getNumSamples());
-            }
+            clearBuffer(0, bufferToFill.getNumSamples());
 
             AudioSampleBuffer* currentAudioSampleBuffer(
                 retainedCurrentBuffer->getAudioSampleBuffer());
@@ -75,9 +90,7 @@ public:
 
                 // NOT WORKING
                 if (bufferSamplesRemainingBeat > 0 && bufferSamplesRemainingFile <= 0) {
-                    for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
-                        bufferToFill.clear(i, position, outputSamplesRemaining);
-                    }
+                    clearBuffer(position, outputSamplesRemaining);
                 }
                 // END OF
                 int samplesThisTime = jmin(outputSamplesRemaining, bufferSamplesRemaining);
@@ -99,5 +112,7 @@ public:
             }
         }
     };
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RenderAudio)
+private:
+    LooperEngineParameters currentParameters;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LooperEngine)
 };

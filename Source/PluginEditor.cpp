@@ -241,7 +241,6 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen() {
             // limit samples to 60 seconds
             duration = jmin(60, duration);
             sampleDuration = duration;
-
             ReferenceCountedBuffer::Ptr newBuffer =
                 new ReferenceCountedBuffer(reader->numChannels, reader->lengthInSamples);
             reader->read(newBuffer->getAudioSampleBuffer(), 0, duration * reader->sampleRate, 0,
