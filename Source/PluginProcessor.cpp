@@ -18,7 +18,6 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "RenderAudio.h"
 
 //==============================================================================
 HelloLooperAudioProcessor::HelloLooperAudioProcessor()
@@ -146,13 +145,23 @@ void HelloLooperAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuff
     for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    Sampler.processAudio(buffer, currentBuffer, totalNumInputChannels, totalNumOutputChannels,
-                         playing, samplesPerBeat, positionSamples, syncOffsetSamples, syncBeat);
-    // move into dedicated LooperEngine?
+    setUpLooperEngineParameters();
+    AudioLooper.processAudio(buffer, currentBuffer);
     syncBeat = false;
     getPlaybackPositionFromHost();
 }
 
+void HelloLooperAudioProcessor::setUpLooperEngineParameters() {
+   processingParameters.totalNumInputChannels = getTotalNumInputChannels();
+   processingParameters.totalNumInputChannels = getTotalNumInputChannels();
+   processingParameters.totalNumOutputChannels = getTotalNumOutputChannels();
+   processingParameters.playing = playing;
+   processingParameters.samplesPerBeat = samplesPerBeat;
+   processingParameters.positionSamples = positionSamples;
+   processingParameters.syncOffsetSamples = syncOffsetSamples;
+   processingParameters.syncBeat = syncBeat;
+   AudioLooper.updateProcessingParameters(processingParameters);
+}
 //==============================================================================
 bool HelloLooperAudioProcessor::hasEditor() const {
     return true;

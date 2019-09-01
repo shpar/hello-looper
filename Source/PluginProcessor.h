@@ -21,7 +21,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "KeyAnalyzer.h"
 #include "ReferenceCountedObject.h"
-#include "RenderAudio.h"
+#include "LooperEngine.h"
 
 //==============================================================================
 
@@ -78,8 +78,11 @@ public:
 
 private:
     //==============================================================================
-    RenderAudio Sampler;
+    LooperEngineParameters processingParameters;
+    LooperEngine AudioLooper;
     KeyAnalyzer KeyAnalyzer;
     void updatePosition();
+    void setUpLooperEngineParameters();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HelloLooperAudioProcessor)
 };
