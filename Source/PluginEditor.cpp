@@ -170,10 +170,6 @@ void HelloLooperAudioProcessorEditor::paintIfFileLoaded(Graphics& g,
                 thumbnailBounds.getY(), std::round(keyPositionLength * thumbnailBounds.getWidth()),
                 thumbnailBounds.getHeight());
             g.fillRect(keyRectangle);
-            DBG("beginning" << std::round(keyPositionPercent * thumbnailBounds.getWidth() +
-                                          thumbnailBounds.getX())
-                            << " length "
-                            << std::round(keyPositionLength * thumbnailBounds.getWidth()));
             if (std::round(keyPositionLength * thumbnailBounds.getWidth()) > 12) {
                 g.setColour(Colours::white);
                 g.drawFittedText(key_name[entry.second], keyRectangle, Justification::centred,
@@ -246,10 +242,6 @@ void HelloLooperAudioProcessorEditor::checkForPathToOpen() {
             duration = jmin(60, duration);
             sampleDuration = duration;
 
-            //            DBG("sample duration " << duration);
-
-            //            positionSlider.setRange(0, duration);
-
             ReferenceCountedBuffer::Ptr newBuffer =
                 new ReferenceCountedBuffer(reader->numChannels, reader->lengthInSamples);
             reader->read(newBuffer->getAudioSampleBuffer(), 0, duration * reader->sampleRate, 0,
@@ -314,7 +306,7 @@ void HelloLooperAudioProcessorEditor::buttonClicked(Button* button) {
 }
 
 void HelloLooperAudioProcessorEditor::openButtonClicked() {
-    FileChooser chooser("Select a Wave file...", File::nonexistent, "*.wav");
+    FileChooser chooser("Select a Wave file...", File(), "*.wav");
 
     if (chooser.browseForFileToOpen()) {
         const File file(chooser.getResult());
@@ -489,8 +481,6 @@ void HelloLooperAudioProcessorEditor::positionSliderChanged() {
 
 void HelloLooperAudioProcessorEditor::tempoSliderChanged() {
     int samples_expected = ((60 / tempoSlider.getValue()) * processor.currentSampleRate);
-    //    int n_samples = processor.currentSampleRate * sampleDuration;
-
     processor.samplesPerBeat = static_cast<int>(samples_expected);
     repaint();
 }
