@@ -148,6 +148,7 @@ void HelloLooperAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuff
 
     Sampler.processAudio(buffer, currentBuffer, totalNumInputChannels, totalNumOutputChannels,
                          playing, samplesPerBeat, positionSamples, syncOffsetSamples, syncBeat);
+    // move into dedicated LooperEngine?
     syncBeat = false;
     getPlaybackPositionFromHost();
 }
@@ -163,17 +164,12 @@ AudioProcessorEditor* HelloLooperAudioProcessor::createEditor() {
 
 //==============================================================================
 void HelloLooperAudioProcessor::getStateInformation(MemoryBlock& destData) {
-    // Store an xml representation of our state.
     std::unique_ptr<XmlElement> xmlState(state.copyState().createXml());
-
     if (xmlState.get() != nullptr) copyXmlToBinary(*xmlState, destData);
 }
 
 void HelloLooperAudioProcessor::setStateInformation(const void* data, int sizeInBytes) {
-    // Restore our plug-in's state from the xml representation stored in the above
-    // method.
     std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-
     if (xmlState.get() != nullptr) state.replaceState(ValueTree::fromXml(*xmlState));
 }
 
